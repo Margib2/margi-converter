@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Unit & City Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      max-width: 600px;
+      margin: auto;
+      background: #f0f8ff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      font-size: 16px;
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    #result, #currencyResult {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <h2>🔧 Smart Unit & City Converter</h2>
+
+  <input type="number" id="inputValue" placeholder="Enter value" />
+
+  <select id="category" onchange="updateUnits()">
+    <option value="length">Length</option>
+    <option value="weight">Weight</option>
+    <option value="temperature">Temperature</option>
+  </select>
+
+  <select id="inputUnit"></select>
+  <select id="outputUnit"></select>
+
+  <button onclick="convert()">Convert</button>
+
+  <h3 id="result">Result: —</h3>
+
+  <hr>
+
+  <h2>🕓 City Distance/Time Info</h2>
+  <input type="text" id="fromCity" placeholder="From City (e.g. Ahmedabad)" />
+  <input type="text" id="toCity" placeholder="To City (e.g. Mumbai)" />
+  <button onclick="calculateDistanceTime()">Get Distance & Time</button>
+  <h3 id="cityResult">Info: —</h3>
+
+  <hr>
+
+  <h2>💱 Currency Converter</h2>
+  <input type="number" id="currencyValue" placeholder="Enter amount" />
+  <select id="fromCurrency">
+    <option value="USD">USD</option>
+    <option value="INR">INR</option>
+    <option value="EUR">EUR</option>
+  </select>
+  <select id="toCurrency">
+    <option value="USD">USD</option>
+    <option value="INR">INR</option>
+    <option value="EUR">EUR</option>
+  </select>
+  <button onclick="convertCurrency()">Convert Currency</button>
+  <h3 id="currencyResult">Currency Result: —</h3>
+
+  <footer>
+    Built with ❤️ by Margi Bhatt
+  </footer>
+
+  <script>
+    const units = {
+      length: { cm: 1, inch: 0.3937, px: 37.7953, mm: 10, m: 0.01 },
+      weight: { kg: 1, g: 1000, lb: 2.20462, oz: 35.274 },
+      temperature: { C: 'C', F: 'F', K: 'K' }
+    };
+
+    const currencyRates = {
+      USD: { USD: 1, INR: 83.2, EUR: 0.92 },
+      INR: { USD: 1/83.2, INR: 1, EUR: 0.011 },
+      EUR: { USD: 1.09, INR: 90.8, EUR: 1 }
+    };
+
+    function updateUnits() {
+      const category = document.getElementById('category').value;
+      const inputUnit = document.getElementById('inputUnit');
+      const outputUnit = document.getElementById('outputUnit');
+
+      inputUnit.innerHTML = '';
+      outputUnit.innerHTML = '';
+
+      for (const unit in units[category]) {
+        inputUnit.add(new Option(unit, unit));
+        outputUnit.add(new Option(unit, unit));
+      }
+    }
+
+    function convert() {
+      const value = parseFloat(document.getElementById('inputValue').value);
+      const category = document.getElementById('category').value;
+      const from = document.getElementById('inputUnit').value;
+      const to = document.getElementById('outputUnit').value;
+
+      let result = 0;
+
+      if (category === 'temperature') {
+        if (from === to) result = value;
+        else if (from === 'C' && to === 'F') result = value * 9/5 + 32;
+        else if (from === 'C' && to === 'K') result = value + 273.15;
+        else if (from === 'F' && to === 'C') result = (value - 32) * 5/9;
+        else if (from === 'F' && to === 'K') result = (value - 32) * 5/9 + 273.15;
+        else if (from === 'K' && to === 'C') result = value - 273.15;
+        else if (from === 'K' && to === 'F') result = (value - 273.15) * 9/5 + 32;
+      } else {
+        result = value * (units[category][to] / units[category][from]);
+      }
+
+      document.getElementById('result').innerText = `Result: ${result.toFixed(4)} ${to}`;
+    }
+
+    function calculateDistanceTime() {
+      const from = document.getElementById('fromCity').value.trim().toLowerCase();
+      const to = document.getElementById('toCity').value.trim().toLowerCase();
+
+      const distances = {
+        'ahmedabad-mumbai': { distance: '526 km', time: '8 hours' },
+        'delhi-jaipur': { distance: '280 km', time: '5 hours' },
+        'surat-vadodara': { distance: '154 km', time: '3 hours' },
+        'udaipur-jaipur': { distance: '393 km', time: '6.5 hours' },
+        'ahmedabad-delhi': { distance: '950 km', time: '15 hours' }
+      };
+
+      const key = `${from}-${to}`;
+      const reverseKey = `${to}-${from}`;
+      const info = distances[key] || distances[reverseKey];
+
+      if (info) {
+        document.getElementById('cityResult').innerText = `Distance: ${info.distance}, Approx Time: ${info.time}`;
+      } else {
+        document.getElementById('cityResult').innerText = `Sorry! Info not available for these cities.`;
+      }
+    }
+
+    function convertCurrency() {
+      const amount = parseFloat(document.getElementById('currencyValue').value);
+      const from = document.getElementById('fromCurrency').value;
+      const to = document.getElementById('toCurrency').value;
+      const rate = currencyRates[from][to];
+      const converted = amount * rate;
+      document.getElementById('currencyResult').innerText = `Converted Amount: ${converted.toFixed(2)} ${to}`;
+    }
+
+    updateUnits();
+  </script>
+</body>
+</html>
